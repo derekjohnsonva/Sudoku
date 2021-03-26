@@ -1,35 +1,11 @@
-use std::collections::HashMap;
 use std::convert::TryInto;
 
 struct Point {
     x: i8,
     y: i8,
 }
-fn row_col_is_valid(line: &[usize; 9]) -> bool {
-    let mut vals: [i8; 9] = [0; 9];
-    
-    for i in 0..9 {
-        let cell:usize = line[i];
-        if cell != 0 {
-            if !(vals[cell-1] == 0){
-                return false
-            }
-            else {
-                vals[cell-1] = 1;
-            }
-        }
-    }
-    println!("Hello World");
-    println!("{:?}",vals);
-    return true;
-}
-// 1 | 2  | 3  
-// ----------
-// 4 | 5  | 6
-// ----------
-// 7 | 8  | 9
-// fn square_is_valid(puzzle: &[[usize; 9]; 9], square: u8)
-fn get_row_possibilities(puzzle: &mut [[i8; 9]; 9], p: &Point) -> [i8; 9] {
+
+fn get_row_possibilities(puzzle: & [[i8; 9]; 9], p: &Point) -> [i8; 9] {
     let mut row_possiblities: [i8; 9] = [0; 9];
     for i in 0..9 {
         let cell = puzzle[p.x as usize][i];
@@ -40,7 +16,7 @@ fn get_row_possibilities(puzzle: &mut [[i8; 9]; 9], p: &Point) -> [i8; 9] {
     return row_possiblities;
 }
 
-fn get_col_possibilities(puzzle: &mut [[i8; 9]; 9], p: &Point) -> [i8; 9] {
+fn get_col_possibilities(puzzle: & [[i8; 9]; 9], p: &Point) -> [i8; 9] {
     let mut col_possiblities: [i8; 9] = [0; 9];
     for i in 0..9 {
         let cell = puzzle[i][p.y as usize];
@@ -51,7 +27,7 @@ fn get_col_possibilities(puzzle: &mut [[i8; 9]; 9], p: &Point) -> [i8; 9] {
     return col_possiblities;
 }
 
-fn get_square_possibilities(puzzle: &mut [[i8; 9]; 9], p: &Point) -> [i8; 9] {
+fn get_square_possibilities(puzzle: & [[i8; 9]; 9], p: &Point) -> [i8; 9] {
     let x_ind: usize = (p.x / 3 * 3).try_into().unwrap();
     let y_ind: usize = (p.y / 3 * 3).try_into().unwrap();
     let mut square_possiblities: [i8; 9] = [0; 9];
@@ -66,7 +42,7 @@ fn get_square_possibilities(puzzle: &mut [[i8; 9]; 9], p: &Point) -> [i8; 9] {
     return square_possiblities;
 }
 
-fn get_valid_numbers(puzzle: &mut [[i8; 9]; 9], p: &Point) -> Vec<i8> {
+fn get_valid_numbers(puzzle: & [[i8; 9]; 9], p: &Point) -> Vec<i8> {
     // Loop over the row the point is in
     // if a val is in possibilities, update 
     // the array with the val 1
@@ -87,11 +63,11 @@ fn get_valid_numbers(puzzle: &mut [[i8; 9]; 9], p: &Point) -> Vec<i8> {
     }
     return output;
 }
-
+// 
 fn solve(puzzle: &mut [[i8; 9]; 9], unfilled: &mut Vec<Point>) -> bool {
     // Check to see if there are any empty spaces
     // If not, return true. The puzzle is solved!
-    // If there are empty spaces, get one of them.
+    // If there are empty spaces, get the best one
     let point: Point;
     match unfilled.pop() {
         None => return true,
@@ -119,41 +95,28 @@ fn solve(puzzle: &mut [[i8; 9]; 9], unfilled: &mut Vec<Point>) -> bool {
     // this will trigger backtracking. 
     return false
 }
-fn get_unfilled(puzzle: &mut [[i8; 9]; 9]) -> Vec<Point> {
-    let mut output: Vec<Point> = Vec::new();
-    for x in 0..9 {
-        for y in 0..9 {
-            let cell = puzzle[x][y];
-            if cell == 0 {
-                let point: Point = Point{x: x as i8, y: y as i8};
-                output.push(point);
-            }
-        }
-    }
-    return output;
-}
 
 pub fn parse_and_solve(content: &str) -> [[i8; 9]; 9] {
     // parse the string into a two dimentional array
     let mut puzzle: [[i8; 9]; 9] = [[0; 9]; 9];
     let mut unfilled: Vec<Point> = Vec::new();
 
-    let RADIX: u32 = 10;
+    let radix: u32 = 10;
     let mut count = 0;
     for c in content.chars() {
         let val: u32;
         if c == '.' {
             val = 0;
         } else {
-            val = c.to_digit(RADIX).unwrap();
+            val = c.to_digit(radix).unwrap();
         }
         let x = count / 9;
         let y = count % 9;
         count += 1;
         puzzle[x][y] = val as i8;
         if val == 0 {
-            let newPoint: Point = Point{x: x as i8, y: y as i8};
-            unfilled.push(newPoint);
+            let new_point: Point = Point{x: x as i8, y: y as i8};
+            unfilled.push(new_point);
         }
     }
 
@@ -181,6 +144,21 @@ pub fn puzzle_to_string(puzzle: &[[i8; 9]; 9]) -> String {
     return output;
 }
 
+#[cfg(test)]
+fn get_unfilled(puzzle: &mut [[i8; 9]; 9]) -> Vec<Point> {
+    let mut output: Vec<Point> = Vec::new();
+    for x in 0..9 {
+        for y in 0..9 {
+            let cell = puzzle[x][y];
+            if cell == 0 {
+                let point: Point = Point{x: x as i8, y: y as i8};
+                output.push(point);
+            }
+        }
+    }
+    return output;
+}
+#[cfg(test)]
 fn test_board() -> [[i8; 9]; 9] {
     [
         [1, 7, 4, 0, 9, 0, 6, 0, 0],
@@ -195,7 +173,7 @@ fn test_board() -> [[i8; 9]; 9] {
     ]
 }
 
-
+#[cfg(test)]
 fn almost_solved_test_board() -> [[i8; 9]; 9] {
     [
         [1, 7, 4, 0, 9, 5, 6, 8, 3],
@@ -209,7 +187,7 @@ fn almost_solved_test_board() -> [[i8; 9]; 9] {
         [7, 5, 3, 1, 8, 4, 2, 9, 6],
     ]
 }
-
+#[cfg(test)]
 fn solved_test_board() -> [[i8; 9]; 9] {
     [
         [1, 7, 4, 2, 9, 5, 6, 8, 3],
@@ -223,26 +201,9 @@ fn solved_test_board() -> [[i8; 9]; 9] {
         [7, 5, 3, 1, 8, 4, 2, 9, 6],
     ]
 }
+#[cfg(test)]
 fn test_board_str() -> &'static str {
     "174.9.6......3815753.7.1..4..73498..84.5..36.3.5..647.2869....1...627.38.53.8..96"
-}
-#[test]
-fn test_row_col_is_valid() {
-    let arr1:[usize; 9] = [0,0,0,0,0,0,0,0,0];
-    let arr2:[usize; 9] = [1,2,3,0,0,0,0,0,0];
-    let arr3:[usize; 9] = [1,2,3,4,5,6,7,8,9];
-    let out1 = row_col_is_valid(&arr1);
-    let out2 = row_col_is_valid(&arr2);
-    let out3 = row_col_is_valid(&arr3);
-    assert_eq!(true, out1);
-    assert_eq!(true, out2);
-    assert_eq!(true, out3);
-}
-#[test]
-fn test_row_col_is_invalid() {
-    let arr4:[usize; 9] = [1,1,0,0,0,0,0,0,0];
-    let out4 = row_col_is_valid(&arr4);
-    assert_eq!(false, out4);
 }
 
 #[test]
