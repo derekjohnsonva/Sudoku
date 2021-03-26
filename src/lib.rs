@@ -144,6 +144,10 @@ pub fn puzzle_to_string(puzzle: &[[i8; 9]; 9]) -> String {
     return output;
 }
 
+pub fn print_to_output(content: &str, mut writer: impl std::io::Write) {
+    writeln!(writer, "{}", content);
+}
+
 #[cfg(test)]
 fn get_unfilled(puzzle: &mut [[i8; 9]; 9]) -> Vec<Point> {
     let mut output: Vec<Point> = Vec::new();
