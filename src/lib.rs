@@ -1,5 +1,5 @@
 use std::convert::TryInto;
-
+#[derive(Clone)]
 struct Point {
     x: i8,
     y: i8,
@@ -65,11 +65,11 @@ fn get_valid_numbers(puzzle: & [[i8; 9]; 9], x: i8, y: i8) -> Vec<i8> {
     return output;
 }
 // 
-fn solve(puzzle: &mut [[i8; 9]; 9]) -> bool {
+fn solve(puzzle: &mut [[i8; 9]; 9], unfilled: &mut Vec<Point>) -> bool {
     // Check to see if there are any empty spaces
     // If not, return true. The puzzle is solved!
     // If there are empty spaces, get the best one
-    let mut unfilled = get_unfilled(&puzzle);
+    // let mut unfilled = get_unfilled(& puzzle);
     let point: Point;
     match unfilled.pop() {
         None => return true,
@@ -83,16 +83,15 @@ fn solve(puzzle: &mut [[i8; 9]; 9]) -> bool {
     // new puzzle. 
     // If we get a true return from our recursive call, return true
     // Else, set the possibility back to 0
-    // println!("trying point {}, {}", point.x, point.y);
-
     for number in point.possibilities.iter() {
-        puzzle[point.x as usize][point.y as usize] = *number;
-        if solve(puzzle){
+        let mut new_unfilled = unfilled.to_vec();
+        update_unfilled(&mut new_unfilled, point.x, point.y, *number);
+        let mut new_puzzle = puzzle.clone();
+        new_puzzle[point.x as usize][point.y as usize] = *number;
+        if solve(&mut new_puzzle, &mut new_unfilled){
             return true;
         }
-        puzzle[point.x as usize][point.y as usize] = 0;
     }
-    unfilled.push(point);
     // If no valid possiblities exist, return false
     // this will trigger backtracking. 
     return false
@@ -118,6 +117,35 @@ fn parse_puzzle(content: &str) -> [[i8; 9]; 9] {
     return puzzle;
 }
 
+fn update_unfilled(unfilled: &mut Vec<Point>, x: i8, y: i8, val: i8) {
+    let x_ind: i8 = x / 3 * 3;
+    let y_ind: i8 = y / 3 * 3;
+
+    for point in unfilled.iter_mut() {
+        // if point
+        let in_row: bool = point.x == x;
+        let in_col: bool = point.y == y;
+        let p_x_ind: i8 = point.x / 3 * 3;
+        let p_y_ind: i8 = point.y / 3 * 3;
+        let in_square: bool = x_ind == p_x_ind && y_ind == p_y_ind;
+
+        if in_row || in_col || in_square {
+            // point.possibilities.drain_filter(|p| *p == val);
+            let mut i = 0;
+            while i != point.possibilities.len() {
+                if point.possibilities[i] == val {
+                    point.possibilities.remove(i);
+                } else {
+                    i += 1;
+                }
+            }
+        }
+    }
+    unfilled.sort_by_cached_key(|p| p.possibilities.len());
+    unfilled.reverse();
+}
+
+
 fn get_unfilled(puzzle: & [[i8; 9]; 9]) -> Vec<Point> {
     let mut output: Vec<Point> = Vec::new();
 
@@ -128,6 +156,7 @@ fn get_unfilled(puzzle: & [[i8; 9]; 9]) -> Vec<Point> {
                 let possibilities: Vec<i8> = get_valid_numbers(puzzle, x as i8, y as i8);
                 let point: Point = Point{x: x as i8, y: y as i8, possibilities};
                 output.push(point);
+                
             }
         }
     }
@@ -145,8 +174,8 @@ fn get_unfilled(puzzle: & [[i8; 9]; 9]) -> Vec<Point> {
 pub fn parse_and_solve(content: &str) -> [[i8; 9]; 9] {
     // parse the string into a two dimentional array
     let mut puzzle: [[i8; 9]; 9] = parse_puzzle(&content);
-    // let mut unfilled: Vec<Point> = get_unfilled(&puzzle);
-    solve(&mut puzzle);
+    let mut unfilled: Vec<Point> = get_unfilled(&puzzle);
+    solve(&mut puzzle, &mut unfilled);
     return puzzle
 }
 
@@ -243,7 +272,7 @@ fn test_get_valid_numbers_2() {
 #[test]
 fn test_solve() {
     let mut board = test_board();
-    let mut unfilled = get_unfilled(&mut board);
+    let mut unfilled = get_unfilled(&board);
     let actual = solve(&mut board, &mut unfilled);
     assert_eq!(true, actual);
     let solved = solved_test_board();
