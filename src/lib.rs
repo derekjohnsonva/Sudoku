@@ -1,5 +1,5 @@
 use std::convert::TryInto;
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Point {
     x: i8,
     y: i8,
@@ -72,7 +72,9 @@ fn solve(puzzle: &mut [[i8; 9]; 9], unfilled: &mut Vec<Point>) -> bool {
     // let mut unfilled = get_unfilled(& puzzle);
     let point: Point;
     match unfilled.pop() {
-        None => return true,
+        None => {
+            return true;
+        },
         Some(p) => {
             point = p;
         }
@@ -86,11 +88,11 @@ fn solve(puzzle: &mut [[i8; 9]; 9], unfilled: &mut Vec<Point>) -> bool {
     for number in point.possibilities.iter() {
         let mut new_unfilled = unfilled.to_vec();
         update_unfilled(&mut new_unfilled, point.x, point.y, *number);
-        let mut new_puzzle = puzzle.clone();
-        new_puzzle[point.x as usize][point.y as usize] = *number;
-        if solve(&mut new_puzzle, &mut new_unfilled){
+        puzzle[point.x as usize][point.y as usize] = *number;
+        if solve(puzzle, &mut new_unfilled){
             return true;
         }
+        puzzle[point.x as usize][point.y as usize] = 0;
     }
     // If no valid possiblities exist, return false
     // this will trigger backtracking. 
